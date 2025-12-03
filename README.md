@@ -1,4 +1,6 @@
-# AI Travel Planner - 
+# AI Travel Planner
+
+An intelligent travel planning application built with LangGraph, FastAPI, and multiple AI tools to create comprehensive trip itineraries with weather forecasts, attractions, hotels, and budget calculations.
 
 ## Project Structure
 
@@ -73,6 +75,10 @@ AI-Trip-Planner/
 - **nodes.py**: Core workflow nodes (agent, tool routing, result processing)
 - **itinerary.py**: Specialized nodes for itinerary creation and expense calculation
 
+#### Workflow Architecture
+![LangGraph Workflow Diagram](graph.png)
+*The LangGraph workflow showing the AI agent's decision-making process for trip planning*
+
 ### `utils/`
 - **export.py**: Excel export functionality with formatting
 - Utility functions that can be shared across modules
@@ -82,6 +88,9 @@ AI-Trip-Planner/
 - **routes.py**: All API endpoint implementations
 - Clean separation of web layer from business logic
 
+#### API Documentation
+![FastAPI Interactive Documentation](fastapi.png)
+*FastAPI's automatic interactive documentation interface showing all available endpoints*
 ## Running the Application
 
 1. Install dependencies:
@@ -116,11 +125,3 @@ The server will start on `http://0.0.0.0:8000`
 - `POST /nearby-places` - Get nearby places
 - `GET /health` - Health check
 
-## Next Steps
-
-This modular structure makes it easy to:
-- Add new tools by creating files in the `tools/` directory
-- Extend the workflow by adding nodes in the `graph/` directory
-- Add new API endpoints in the `api/` directory
-- Modify configuration in the `config/` directory
-- Add new data models in the `models/` directory
