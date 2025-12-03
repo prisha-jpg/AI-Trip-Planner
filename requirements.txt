@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+pydantic
+python-dotenv
+requests
+pandas
+langchain-groq
+langchain
+langgraph
+openpyxl
+matplotlib
