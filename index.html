@@ -1,0 +1,2224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Travel Planner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .icon {
+            font-size: 2em;
+            margin-right: 15px;
+        }
+
+        .card-title {
+            font-size: 1.5em;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            display: none;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        #toolResult {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            max-width: 400px;
+            z-index: 1000;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        /* Itinerary Summary Styles */
+        .itinerary-summary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            margin: 20px 15px 15px 15px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .summary-header h3 {
+            margin: 0 0 20px 0;
+            font-size: 1.4em;
+            text-align: center;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        
+        .summary-item {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .summary-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+        
+        .summary-value {
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        .results {
+            display: none;
+        }
+
+        .result-section {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .result-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .result-header h3 {
+            font-size: 1.4em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .weather-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .weather-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .temp {
+            font-size: 2em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .attraction-item, .hotel-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .attraction-header, .hotel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 10px;
+        }
+
+        .name {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .price-badge {
+            background: #667eea;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .rating {
+            color: #ffa500;
+            font-size: 1.1em;
+        }
+
+        .description {
+            color: #666;
+            margin: 10px 0;
+            line-height: 1.6;
+        }
+
+        .tags {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .tag {
+            background: #e0e7ff;
+            color: #667eea;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.9em;
+        }
+
+        .expense-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .expense-table th, .expense-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .expense-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .expense-table .total-row {
+            background: #fff3cd;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .itinerary-content {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 0;
+            border-radius: 15px;
+            line-height: 1.8;
+            max-height: 700px;
+            overflow-y: auto;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .day-card {
+            background: white;
+            margin: 15px;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-left: 6px solid #667eea;
+            position: relative;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .day-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.2);
+        }
+
+        .day-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .day-title {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #667eea;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .day-date {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .activity-item {
+            background: #f8f9ff;
+            padding: 18px;
+            margin: 12px 0;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .activity-item:hover {
+            background: #f0f4ff;
+            transform: translateX(5px);
+        }
+
+        .activity-time {
+            background: #667eea;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9em;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 1.1em;
+        }
+
+        .activity-description {
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .itinerary-header {
+            text-align: center;
+            padding: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin: 15px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .itinerary-title {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .itinerary-subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        /* Enhanced Itinerary Styles */
+        .section-header {
+            font-size: 1.3em;
+            color: #667eea;
+            margin: 20px 0 15px 0;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e9ecef;
+            font-weight: 600;
+        }
+        
+        .time-management-section {
+            background: #f8f9ff;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 15px 0;
+            border: 1px solid #e0e7ff;
+        }
+        
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            border-radius: 2px;
+        }
+        
+        .timeline-item {
+            position: relative;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -37px;
+            top: 5px;
+            width: 12px;
+            height: 12px;
+            background: #667eea;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 0 0 2px #667eea;
+        }
+        
+        .timeline-time {
+            background: #667eea;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9em;
+            min-width: 80px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        
+        .timeline-content {
+            flex: 1;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .timeline-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 1.1em;
+        }
+        
+        .timeline-description {
+            color: #666;
+            line-height: 1.5;
+            font-size: 0.95em;
+        }
+        
+        .info-section {
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 15px 0;
+            border: 1px solid #e9ecef;
+        }
+        
+        .info-grid {
+            display: grid;
+            gap: 12px;
+        }
+        
+        .info-item.info-pair {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 15px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            align-items: start;
+        }
+        
+        .info-key {
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.95em;
+        }
+        
+        .info-value {
+            color: #666;
+            line-height: 1.4;
+            font-size: 0.95em;
+        }
+        
+        .info-item.info-single {
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .info-text {
+            color: #666;
+            line-height: 1.5;
+            font-size: 0.95em;
+        }
+        
+        .general-activities {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 15px 0;
+        }
+        
+        /* Enhanced activity items for better organization */
+        .general-activities .activity-item {
+            background: white;
+            margin: 10px 0;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .general-activities .activity-item:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        /* Responsive improvements */
+        @media (max-width: 768px) {
+            .timeline {
+                padding-left: 20px;
+            }
+            
+            .timeline-item {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .timeline-time {
+                align-self: flex-start;
+            }
+            
+            .info-item.info-pair {
+                grid-template-columns: 1fr;
+                gap: 5px;
+            }
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .export-btn {
+            background: #28a745;
+            flex: 1;
+        }
+
+        .export-btn:hover {
+            background: #218838;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        @media (max-width: 968px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .row {
+                grid-template-columns: 1fr;
+            }
+            
+            .day-card {
+                margin: 10px;
+                padding: 20px;
+            }
+            
+            .itinerary-header {
+                margin: 10px;
+                padding: 20px;
+            }
+            
+            .itinerary-title {
+                font-size: 1.8em;
+            }
+            
+            .summary-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        /* Tab Navigation Styles */
+        .tab-container {
+            margin-bottom: 30px;
+        }
+
+        .tab-nav {
+            display: flex;
+            background: white;
+            border-radius: 15px;
+            padding: 5px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 15px 20px;
+            border: none;
+            background: transparent;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #666;
+        }
+
+        .tab-button.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: none;
+            box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .tab-button:hover:not(.active) {
+            background: #f8f9fa;
+            color: #333;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .tool-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .tool-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .tool-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .tool-icon {
+            font-size: 2.5em;
+            margin-right: 15px;
+        }
+
+        .tool-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .tool-description {
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .dual-currency {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+
+        .currency-item {
+            text-align: center;
+        }
+
+        .currency-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .currency-amount {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .conversion-arrow {
+            font-size: 1.5em;
+            color: #667eea;
+        }
+        
+        /* Enhanced Itinerary Styles */
+        .section-header {
+            font-size: 1.3em;
+            color: #667eea;
+            margin: 20px 0 15px 0;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e9ecef;
+            font-weight: 600;
+        }
+        
+        .time-management-section {
+            background: #f8f9ff;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 15px 0;
+            border: 1px solid #e0e7ff;
+        }
+        
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            border-radius: 2px;
+        }
+        
+        .timeline-item {
+            position: relative;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -37px;
+            top: 5px;
+            width: 12px;
+            height: 12px;
+            background: #667eea;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 0 0 2px #667eea;
+        }
+        
+        .timeline-time {
+            background: #667eea;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9em;
+            min-width: 80px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        
+        .timeline-content {
+            flex: 1;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .timeline-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 1.1em;
+        }
+        
+        .timeline-description {
+            color: #666;
+            line-height: 1.5;
+            font-size: 0.95em;
+        }
+        
+        .info-section {
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 15px 0;
+            border: 1px solid #e9ecef;
+        }
+        
+        .info-grid {
+            display: grid;
+            gap: 12px;
+        }
+        
+        .info-item.info-pair {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 15px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            align-items: start;
+        }
+        
+        .info-key {
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.95em;
+        }
+        
+        .info-value {
+            color: #666;
+            line-height: 1.4;
+            font-size: 0.95em;
+        }
+        
+        .info-item.info-single {
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .info-text {
+            color: #666;
+            line-height: 1.5;
+            font-size: 0.95em;
+        }
+        
+        .general-activities {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 15px 0;
+        }
+        
+        /* Enhanced activity items for better organization */
+        .general-activities .activity-item {
+            background: white;
+            margin: 10px 0;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .general-activities .activity-item:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        /* Itinerary Summary Styles */
+        .itinerary-summary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            margin: 20px 15px 15px 15px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .summary-header h3 {
+            margin: 0 0 20px 0;
+            font-size: 1.4em;
+            text-align: center;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        
+        .summary-item {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .summary-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+        
+        .summary-value {
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+        
+        /* Responsive improvements */
+        @media (max-width: 768px) {
+            .timeline {
+                padding-left: 20px;
+            }
+            
+            .timeline-item {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .timeline-time {
+                align-self: flex-start;
+            }
+            
+            .info-item.info-pair {
+                grid-template-columns: 1fr;
+                gap: 5px;
+            }
+            
+            .day-card {
+                margin: 10px;
+                padding: 20px;
+            }
+            
+            .itinerary-header {
+                margin: 10px;
+                padding: 20px;
+            }
+            
+            .itinerary-title {
+                font-size: 1.8em;
+            }
+            
+            .summary-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>✈️ TripGPT</h1>
+            <p class="subtitle">Plan your perfect trip with AI-powered recommendations</p>
+        </header>
+
+        <!-- Tab Navigation -->
+        <div class="tab-container">
+            <div class="tab-nav">
+                <button class="tab-button active" onclick="showTab('planning', event)">📝 Plan Trip</button>
+                <button class="tab-button" onclick="showTab('tools', event)">🛠️ All Tools</button>
+            </div>
+
+            <!-- Trip Planning Tab -->
+            <div id="planning" class="tab-content active">
+                <div class="main-content">
+                    <div class="card full-width">
+                        <div class="card-header">
+                            <span class="icon">📝</span>
+                            <h2 class="card-title">Plan Your Perfect Trip</h2>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                            <div>
+                                <div class="form-group">
+                                    <label>From City</label>
+                                    <input type="text" id="fromCity" placeholder="Mumbai" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>To City</label>
+                                    <input type="text" id="toCity" placeholder="Paris" required>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="form-group">
+                                        <label>Arrival Date</label>
+                                        <input type="date" id="arrivalDate" required>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label>Arrival Time</label>
+                                        <input type="time" id="arrivalTime" value="10:00" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="form-group">
+                                    <label>Number of Days</label>
+                                    <input type="number" id="numDays" min="1" max="30" value="3" required>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="form-group">
+                                        <label>Adults</label>
+                                        <input type="number" id="numAdults" min="1" value="2" required>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label>Children</label>
+                                        <input type="number" id="numKids" min="0" value="0">
+                                    </div>
+                                </div>
+                                
+                                <button onclick="planTrip()" style="margin-top: 20px;">🚀 Generate Trip Plan</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- All Tools Tab -->
+            <div id="tools" class="tab-content">
+                <div class="tools-grid">
+                    <!-- Weather Tool -->
+                    <div class="tool-card">
+                        <div class="tool-header">
+                            <span class="tool-icon">🌤️</span>
+                            <div>
+                                <div class="tool-title">Weather Forecast</div>
+                                <div class="tool-description">Get detailed weather information for any city</div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>City Name</label>
+                            <input type="text" id="weatherCityTool" placeholder="Enter city name">
+                            <button onclick="getWeatherTool()" style="margin-top: 10px;">🌤️ Get Weather</button>
+                        </div>
+                    </div>
+
+                    <!-- Currency Converter -->
+                    <div class="tool-card">
+                        <div class="tool-header">
+                            <span class="tool-icon">💱</span>
+                            <div>
+                                <div class="tool-title">Currency Converter</div>
+                                <div class="tool-description">Convert currency between any two cities</div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="row">
+                                <input type="text" id="currencyFromTool" placeholder="From City">
+                                <input type="text" id="currencyToTool" placeholder="To City">
+                            </div>
+                            <button onclick="convertCurrencyTool()" style="margin-top: 10px;">💱 Convert</button>
+                        </div>
+                    </div>
+
+                    <!-- Attractions Finder -->
+                    <div class="tool-card">
+                        <div class="tool-header">
+                            <span class="tool-icon">🎭</span>
+                            <div>
+                                <div class="tool-title">Top Attractions</div>
+                                <div class="tool-description">Discover the best attractions in any city</div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>City Name</label>
+                            <input type="text" id="attractionsCity" placeholder="Enter city name">
+                            <div class="row" style="margin-top: 10px;">
+                                <input type="number" id="attractionsDays" placeholder="Days" min="1" value="3">
+                                <button onclick="getAttractions()">🎭 Find Attractions</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Hotel Finder -->
+                    <div class="tool-card">
+                        <div class="tool-header">
+                            <span class="tool-icon">🏨</span>
+                            <div>
+                                <div class="tool-title">Hotel Recommendations</div>
+                                <div class="tool-description">Find the best hotels for your stay</div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>City Name</label>
+                            <input type="text" id="hotelCity" placeholder="Enter city name">
+                            <div class="row" style="margin-top: 10px;">
+                                <input type="number" id="hotelAdults" placeholder="Adults" min="1" value="2">
+                                <input type="number" id="hotelKids" placeholder="Children" min="0" value="0">
+                            </div>
+                            <input type="number" id="hotelDays" placeholder="Number of days" min="1" value="3" style="margin-top: 10px;">
+                            <button onclick="getHotels()" style="margin-top: 10px;">🏨 Find Hotels</button>
+                        </div>
+                    </div>
+
+                    <!-- Nearby Places -->
+                    <div class="tool-card">
+                        <div class="tool-header">
+                            <span class="tool-icon">📍</span>
+                            <div>
+                                <div class="tool-title">Nearby Places</div>
+                                <div class="tool-description">Explore interesting places around your destination</div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>City Name</label>
+                            <input type="text" id="nearbyCity" placeholder="Enter city name">
+                            <button onclick="getNearbyPlaces()" style="margin-top: 10px;">📍 Find Places</button>
+                        </div>
+                    </div>
+
+                    <!-- Trip Export -->
+                    <div class="tool-card">
+                        <div class="tool-header">
+                            <span class="tool-icon">📊</span>
+                            <div>
+                                <div class="tool-title">Export & Print</div>
+                                <div class="tool-description">Export your trip plans and itineraries</div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <button onclick="exportToExcel()" style="margin-bottom: 10px;">📊 Export to Excel</button>
+                            <button onclick="exportItineraryToPDF()" style="margin-bottom: 10px;">📄 Export to PDF</button>
+                            <button onclick="window.print()">🖨️ Print Page</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Planning your perfect trip... This may take a minute.</p>
+        </div>
+
+        <!-- Results -->
+        <div class="results" id="results">
+            <!-- Weather Forecast -->
+            <div class="result-section" id="weatherSection" style="display: none;">
+                <div class="result-header">
+                    <h3>🌤️ Weather Forecast</h3>
+                </div>
+                <div class="weather-grid" id="weatherContent"></div>
+            </div>
+
+            <!-- Top Attractions -->
+            <div class="result-section" id="attractionsSection" style="display: none;">
+                <div class="result-header">
+                    <h3>🎭 Top Attractions</h3>
+                </div>
+                <div id="attractionsContent"></div>
+            </div>
+
+            <!-- Hotels -->
+            <div class="result-section" id="hotelsSection" style="display: none;">
+                <div class="result-header">
+                    <h3>🏨 Hotel Recommendations</h3>
+                </div>
+                <div id="hotelsContent"></div>
+            </div>
+
+            <!-- Expenses -->
+            <div class="result-section" id="expensesSection" style="display: none;">
+                <div class="result-header">
+                    <h3>💰 Expense Breakdown</h3>
+                </div>
+                <div id="expensesContent"></div>
+            </div>
+
+            <!-- Itinerary -->
+            <div class="result-section" id="itinerarySection" style="display: none;">
+                <div class="result-header">
+                    <h3>📅 Detailed Itinerary</h3>
+                </div>
+                <div class="itinerary-content" id="itineraryContent"></div>
+            </div>
+
+            <!-- Export Buttons -->
+            <div class="export-buttons" id="exportButtons" style="display: none;">
+                <button class="export-btn" onclick="exportToExcel()">📊 Export to Excel</button>
+                <button class="export-btn" onclick="exportItineraryToPDF()">📄 Export Itinerary to PDF</button>
+                <button class="export-btn" onclick="window.print()">🖨️ Print Page</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000';
+        let currentTripId = null;
+        let userTripDetails = {}; // Store user input details
+        let exchangeRateInfo = { rate: 1, fromCurrency: 'USD', toCurrency: 'USD' }; // Store exchange rate info
+
+        // Set minimum date to today
+        document.getElementById('arrivalDate').min = new Date().toISOString().split('T')[0];
+
+        // Tab switching functionality
+        function showTab(tabName, event = null) {
+            // Hide all tab contents
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(tab => tab.classList.remove('active'));
+            
+            // Remove active class from all tab buttons
+            const tabButtons = document.querySelectorAll('.tab-button');
+            tabButtons.forEach(button => button.classList.remove('active'));
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to the button - handle both event and direct calls
+            if (event && event.target) {
+                event.target.classList.add('active');
+            } else {
+                // Find the button for this tab when called directly
+                const buttons = document.querySelectorAll('.tab-button');
+                buttons.forEach(button => {
+                    const onclick = button.getAttribute('onclick');
+                    if (onclick && onclick.includes(`'${tabName}'`)) {
+                        button.classList.add('active');
+                    }
+                });
+            }
+        }
+        
+        // Main trip planning function
+        async function planTrip() {
+            const formData = {
+                from_city: document.getElementById('fromCity').value,
+                to_city: document.getElementById('toCity').value,
+                arrival_date: document.getElementById('arrivalDate').value,
+                arrival_time: document.getElementById('arrivalTime').value,
+                num_days: parseInt(document.getElementById('numDays').value),
+                num_adults: parseInt(document.getElementById('numAdults').value),
+                num_kids: parseInt(document.getElementById('numKids').value)
+            };
+            
+            // Store user details
+            userTripDetails = { ...formData };
+
+            try {
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('results').style.display = 'none';
+
+                const response = await fetch(`${API_URL}/plan-trip`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+                currentTripId = data.trip_id;
+
+                // Fetch full trip details
+                await loadTripDetails(currentTripId);
+            } catch (error) {
+                alert('Error planning trip: ' + error.message);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        async function loadTripDetails(tripId) {
+            try {
+                const response = await fetch(`${API_URL}/trip/${tripId}`);
+                const data = await response.json();
+
+                displayResults(data);
+                document.getElementById('results').style.display = 'block';
+            } catch (error) {
+                alert('Error loading trip details: ' + error.message);
+            }
+        }
+
+        function displayResults(data) {
+            console.log('Received trip data:', data); // Debug logging
+            
+            // Summary (always show using user input if backend data missing)
+            displaySummary(data.trip_details);
+
+            // Weather
+            if (data.weather && data.weather.forecasts) {
+                displayWeather(data.weather);
+            } else if (data.weather_data && data.weather_data.forecasts) {
+                displayWeather(data.weather_data);
+            }
+
+            // Attractions
+            if (data.attractions && data.attractions.items) {
+                displayAttractions(data.attractions.items);
+            } else if (data.attractions_data && data.attractions_data.items) {
+                displayAttractions(data.attractions_data.items);
+            }
+
+            // Hotels
+            if (data.hotels && data.hotels.items) {
+                displayHotels(data.hotels.items);
+            } else if (data.hotel_data && data.hotel_data.items) {
+                displayHotels(data.hotel_data.items);
+            }
+
+            // Expenses
+            if (data.expenses && data.expenses.items) {
+                displayExpenses(data.expenses.items);
+            } else if (data.expenses_data && data.expenses_data.items) {
+                displayExpenses(data.expenses_data.items);
+            }
+
+            // Itinerary (always show, even if empty)
+            displayItinerary(data.itinerary);
+
+            document.getElementById('exportButtons').style.display = 'flex';
+        }
+
+        function displaySummary(details) {
+            // Use stored user details if backend details are missing
+            const tripDetails = details || userTripDetails;
+            const html = `
+                <div style="padding: 20px; background: #f8f9fa; border-radius: 10px;">
+                    <p style="font-size: 1.2em; margin-bottom: 10px;"><strong>From:</strong> ${tripDetails?.from_city || 'Not specified'}</p>
+                    <p style="font-size: 1.2em; margin-bottom: 10px;"><strong>To:</strong> ${tripDetails?.to_city || 'Not specified'}</p>
+                    <p style="font-size: 1.2em; margin-bottom: 10px;"><strong>Date:</strong> ${tripDetails?.arrival_date || 'Not specified'}</p>
+                    <p style="font-size: 1.2em; margin-bottom: 10px;"><strong>Time:</strong> ${tripDetails?.arrival_time || 'Not specified'}</p>
+                    <p style="font-size: 1.2em; margin-bottom: 10px;"><strong>Duration:</strong> ${tripDetails?.num_days || 0} days</p>
+                    <p style="font-size: 1.2em;"><strong>Travelers:</strong> ${tripDetails?.num_adults || 0} adults${tripDetails?.num_kids > 0 ? `, ${tripDetails.num_kids} children` : ''}</p>
+                </div>
+            `;
+            const summaryElement = document.getElementById('summaryContent');
+            if (summaryElement) {
+                summaryElement.innerHTML = html;
+                const summarySection = document.getElementById('summarySection');
+                if (summarySection) {
+                    summarySection.style.display = 'block';
+                }
+            }
+        }
+
+        function displayWeather(weather) {
+            const html = weather.forecasts.map(day => `
+                <div class="weather-card">
+                    <div style="font-weight: 600;">${day.day}</div>
+                    <div style="font-size: 0.9em; opacity: 0.9;">${day.date}</div>
+                    <div class="temp">${day.temperature}°C</div>
+                    <div style="opacity: 0.9;">${day.condition}</div>
+                    <div style="margin-top: 10px; font-size: 0.9em;">
+                        💧 ${day.humidity}% | 💨 ${day.wind_speed} m/s
+                    </div>
+                </div>
+            `).join('');
+            const weatherElement = document.getElementById('weatherContent');
+            if (weatherElement) {
+                weatherElement.innerHTML = html;
+                const weatherSection = document.getElementById('weatherSection');
+                if (weatherSection) {
+                    weatherSection.style.display = 'block';
+                }
+            }
+        }
+
+        function displayAttractions(attractions) {
+            const html = attractions.map(attraction => `
+                <div class="attraction-item">
+                    <div class="attraction-header">
+                        <div class="name">${attraction.name}</div>
+                        <div class="price-badge">${attraction.ticket_price} ${attraction.currency}</div>
+                    </div>
+                    <div class="rating">⭐ ${attraction.rating}/5</div>
+                    <div class="description">${attraction.description}</div>
+                    <div class="tags">
+                        <span class="tag">📍 ${attraction.category}</span>
+                        <span class="tag">⏱️ ${attraction.duration}</span>
+                    </div>
+                </div>
+            `).join('');
+            const attractionsElement = document.getElementById('attractionsContent');
+            if (attractionsElement) {
+                attractionsElement.innerHTML = html;
+                const attractionsSection = document.getElementById('attractionsSection');
+                if (attractionsSection) {
+                    attractionsSection.style.display = 'block';
+                }
+            }
+        }
+
+        function displayHotels(hotels) {
+            const html = hotels.map(hotel => `
+                <div class="hotel-item">
+                    <div class="hotel-header">
+                        <div>
+                            <div class="name">${hotel.name}</div>
+                            <div class="rating" style="margin-top: 5px;">⭐ ${hotel.star_rating} Star | 👥 ${hotel.guest_rating}/10</div>
+                        </div>
+                        <div>
+                            <div class="price-badge">${hotel.total_price} ${hotel.currency}</div>
+                            <div style="text-align: right; margin-top: 5px; color: #666; font-size: 0.9em;">
+                                ${hotel.price_per_night} ${hotel.currency}/night
+                            </div>
+                        </div>
+                    </div>
+                    <div class="description">📍 ${hotel.location}</div>
+                    <div class="tags">
+                        ${Array.isArray(hotel.amenities) ? 
+                            hotel.amenities.map(a => `<span class="tag">✓ ${a}</span>`).join('') :
+                            `<span class="tag">${hotel.amenities}</span>`
+                        }
+                    </div>
+                </div>
+            `).join('');
+            const hotelsElement = document.getElementById('hotelsContent');
+            if (hotelsElement) {
+                hotelsElement.innerHTML = html;
+                const hotelsSection = document.getElementById('hotelsSection');
+                if (hotelsSection) {
+                    hotelsSection.style.display = 'block';
+                }
+            }
+        }
+
+        function displayExpenses(expenses) {
+            const fromCity = userTripDetails.from_city || 'Home';
+            const toCity = userTripDetails.to_city || 'Destination';
+            
+            const tableHtml = `
+                <table class="expense-table">
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Description</th>
+                            <th>Local Currency</th>
+                            <th>Home Currency</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${expenses.map(expense => {
+                            const convertedAmount = convertToHomeCurrency(expense.amount, expense.currency);
+                            return `
+                                <tr class="${expense.category === 'TOTAL' ? 'total-row' : ''}">
+                                    <td>${expense.category}</td>
+                                    <td>${expense.description}</td>
+                                    <td>${expense.amount} ${expense.currency}</td>
+                                    <td>${convertedAmount.amount} ${convertedAmount.currency}</td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+                
+                <!-- Currency Conversion Info -->
+                <div class="dual-currency" style="margin-top: 20px;">
+                    <div class="currency-item">
+                        <div class="currency-label">Destination Currency (${toCity})</div>
+                        <div class="currency-amount">${exchangeRateInfo.toCurrency}</div>
+                    </div>
+                    <div class="conversion-arrow">⇄</div>
+                    <div class="currency-item">
+                        <div class="currency-label">Home Currency (${fromCity})</div>
+                        <div class="currency-amount">${exchangeRateInfo.fromCurrency}</div>
+                    </div>
+                </div>
+                ${exchangeRateInfo.rate !== 1 ? `
+                <div style="margin-top: 15px; padding: 10px; background: #e3f2fd; border-radius: 8px; text-align: center;">
+                    <strong>Exchange Rate:</strong> 1 ${exchangeRateInfo.toCurrency} = ${(1/exchangeRateInfo.rate).toFixed(4)} ${exchangeRateInfo.fromCurrency}
+                </div>
+                ` : ''}
+            `;
+            const expensesElement = document.getElementById('expensesContent');
+            if (expensesElement) {
+                expensesElement.innerHTML = tableHtml;
+                document.getElementById('expensesSection').style.display = 'block';
+            }
+        }
+        
+        function convertToHomeCurrency(amount, currency) {
+            // Convert from destination currency to home currency
+            if (currency === exchangeRateInfo.toCurrency && exchangeRateInfo.rate !== 1) {
+                return {
+                    amount: (amount / exchangeRateInfo.rate).toFixed(2),
+                    currency: exchangeRateInfo.fromCurrency
+                };
+            }
+            // If same currency or no conversion rate, return as is but try to get home currency
+            return { 
+                amount: amount.toFixed(2), 
+                currency: exchangeRateInfo.fromCurrency || currency 
+            };
+        }
+
+        // Tool result display function
+        function showToolResult(message, type = 'info', isHtml = false) {
+            const toolResult = document.getElementById('toolResult') || createToolResultDiv();
+            
+            const typeClasses = {
+                'success': 'background: #d4edda; color: #155724; border-left: 4px solid #28a745;',
+                'error': 'background: #f8d7da; color: #721c24; border-left: 4px solid #dc3545;',
+                'loading': 'background: #e3f2fd; color: #1565c0; border-left: 4px solid #2196f3;',
+                'info': 'background: #f8f9fa; color: #495057; border-left: 4px solid #6c757d;'
+            };
+            
+            const style = typeClasses[type] || typeClasses['info'];
+            
+            if (isHtml) {
+                toolResult.innerHTML = message;
+            } else {
+                toolResult.innerHTML = `
+                    <div style="${style} padding: 15px; border-radius: 8px; margin: 15px 0;">
+                        ${type === 'loading' ? '<div style="display: inline-block; width: 16px; height: 16px; border: 2px solid #ccc; border-top: 2px solid #667eea; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 10px;"></div>' : ''}
+                        ${message}
+                    </div>
+                `;
+            }
+            
+            toolResult.style.display = 'block';
+            
+            // Auto hide success messages after 5 seconds
+            if (type === 'success') {
+                setTimeout(() => {
+                    if (toolResult.style.display === 'block') {
+                        toolResult.style.display = 'none';
+                    }
+                }, 5000);
+            }
+        }
+        
+        function createToolResultDiv() {
+            const div = document.createElement('div');
+            div.id = 'toolResult';
+            div.style.display = 'none';
+            document.querySelector('.tab-container').appendChild(div);
+            return div;
+        }
+        
+        function displayItinerary(itinerary) {
+            // Handle null or undefined itinerary
+            if (!itinerary) {
+                const html = `
+                    <div class="itinerary-header">
+                        <div class="itinerary-title">🗓️ Your Amazing Journey</div>
+                        <div class="itinerary-subtitle">Day-by-day adventure guide for ${userTripDetails.to_city || 'your destination'}</div>
+                    </div>
+                    <div class="day-card">
+                        <div style="text-align: center; padding: 40px; color: #666;">
+                            <div style="font-size: 3em; margin-bottom: 20px;">🏝️</div>
+                            <p><strong>Your detailed itinerary is being generated...</strong></p>
+                            <p style="margin-top: 10px; font-size: 0.9em;">This includes personalized recommendations based on your ${userTripDetails.num_days || 3}-day trip!</p>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('itineraryContent').innerHTML = html;
+                document.getElementById('itinerarySection').style.display = 'block';
+                return;
+            }
+            
+            // Parse the itinerary text and create a beautiful layout
+            const days = parseItinerary(itinerary);
+            
+            let html = `
+                <div class="itinerary-header">
+                    <div class="itinerary-title">🗓️ ${userTripDetails.from_city || 'Your'} → ${userTripDetails.to_city || 'Destination'} Adventure</div>
+                    <div class="itinerary-subtitle">${userTripDetails.num_days || 3}-day journey • ${userTripDetails.arrival_date || 'Amazing dates'} • ${userTripDetails.num_adults || 2} travelers</div>
+                </div>
+            `;
+            
+            days.forEach((day, index) => {
+                const dayIcons = ['🌅', '☀️', '🌆', '🌙', '⭐', '🎯', '🎨'];
+                const icon = dayIcons[index % dayIcons.length];
+                
+                html += `
+                    <div class="day-card">
+                        <!-- Day Header -->
+                        <div class="day-header">
+                            <div class="day-title">
+                                ${icon} ${day.title}
+                                ${day.description ? `<span style="font-size: 0.7em; font-weight: normal; margin-left: 10px; opacity: 0.9;">${day.description}</span>` : ''}
+                            </div>
+                            <div class="day-date">${day.date}</div>
+                        </div>
+                        
+                        <!-- Time Management Section -->
+                        ${day.activities.filter(a => a.type === 'timed').length > 0 ? `
+                        <div class="time-management-section">
+                            <h4 class="section-header">⏰ Time Schedule</h4>
+                            <div class="timeline">
+                                ${day.activities.filter(a => a.type === 'timed').sort((a, b) => {
+                                    const timeA = a.time.replace(/[^0-9]/g, '');
+                                    const timeB = b.time.replace(/[^0-9]/g, '');
+                                    return parseInt(timeA) - parseInt(timeB);
+                                }).map(activity => `
+                                    <div class="timeline-item">
+                                        <div class="timeline-time">${activity.time}</div>
+                                        <div class="timeline-content">
+                                            <div class="timeline-title">${activity.title}</div>
+                                            <div class="timeline-description">${activity.description}</div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        ` : ''}
+                        
+                        <!-- Information Sections -->
+                        ${day.sections.map(section => `
+                            <div class="info-section">
+                                <h4 class="section-header">${section.title}</h4>
+                                <div class="info-grid">
+                                    ${section.items.map(item => `
+                                        <div class="info-item ${item.key ? 'info-pair' : 'info-single'}">
+                                            ${item.key ? `
+                                                <div class="info-key">${item.key}</div>
+                                                <div class="info-value">${item.value}</div>
+                                            ` : `
+                                                <div class="info-text">${item.value}</div>
+                                            `}
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `).join('')}
+                        
+                        <!-- General Activities -->
+                        ${day.activities.filter(a => a.type === 'general').length > 0 ? `
+                        <div class="general-activities">
+                            <h4 class="section-header">📋 Additional Information</h4>
+                            ${day.activities.filter(a => a.type === 'general').map(activity => `
+                                <div class="activity-item">
+                                    <div class="activity-time">${activity.time}</div>
+                                    <div class="activity-content">
+                                        <div class="activity-title">${activity.title}</div>
+                                        ${activity.description ? `<div class="activity-description">${activity.description}</div>` : ''}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        ` : ''}
+                    </div>
+                `;
+            });
+            
+            // Add summary footer
+            html += `
+                <div class="itinerary-summary">
+                    <div class="summary-header">
+                        <h3>📊 Trip Overview</h3>
+                    </div>
+                    <div class="summary-grid">
+                        <div class="summary-item">
+                            <div class="summary-label">Duration</div>
+                            <div class="summary-value">${userTripDetails.num_days || 3} Days</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-label">Travelers</div>
+                            <div class="summary-value">${userTripDetails.num_adults || 2} Adults${userTripDetails.num_kids > 0 ? `, ${userTripDetails.num_kids} Children` : ''}</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-label">Route</div>
+                            <div class="summary-value">${userTripDetails.from_city || 'Home'} → ${userTripDetails.to_city || 'Destination'}</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-label">Start Date</div>
+                            <div class="summary-value">${userTripDetails.arrival_date || 'Not set'}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            const itineraryElement = document.getElementById('itineraryContent');
+            if (itineraryElement) {
+                itineraryElement.innerHTML = html;
+                const itinerarySection = document.getElementById('itinerarySection');
+                if (itinerarySection) {
+                    itinerarySection.style.display = 'block';
+                }
+            }
+        }
+        
+        function parseItinerary(itineraryText) {
+            // Enhanced parser for better itinerary structure
+            const lines = itineraryText.split('\n');
+            const days = [];
+            let currentDay = null;
+            let currentSection = null;
+            
+            // Clean and filter lines
+            const cleanLines = lines.map(line => line.trim())
+                .filter(line => line && 
+                    !line.includes('Enjoy this amazing experience!') && 
+                    line.length > 2
+                );
+            
+            cleanLines.forEach((line, index) => {
+                // Detect day headers
+                if (line.match(/day\s*\d+|Day\s*\d+/i) || line.includes('###') || 
+                    line.match(/\d{1,2}\s+January|\d{1,2}\s+December/i)) {
+                    
+                    if (currentDay) days.push(currentDay);
+                    
+                    // Extract day number and date
+                    const dayMatch = line.match(/day\s*(\d+)/i);
+                    const dayNum = dayMatch ? dayMatch[1] : days.length + 1;
+                    
+                    // Extract date if present
+                    const dateMatch = line.match(/(\d{1,2}\s+\w+\s+\d{4})|\d{1,2}\/\d{1,2}\/\d{4}/);
+                    const extractedDate = dateMatch ? dateMatch[0] : `Day ${dayNum}`;
+                    
+                    currentDay = {
+                        title: `Day ${dayNum}`,
+                        date: extractedDate,
+                        description: line.replace(/#+/g, '').replace(/day\s*\d+/i, '').trim(),
+                        activities: [],
+                        sections: []
+                    };
+                    currentSection = null;
+                }
+                // Detect section headers (## or bold text)
+                else if (line.includes('##') || line.includes('**') || 
+                         line.match(/^[A-Z\s&-]{10,}$/)) {
+                    
+                    if (currentDay) {
+                        currentSection = {
+                            title: line.replace(/#+/g, '').replace(/\*\*/g, '').trim(),
+                            items: []
+                        };
+                        currentDay.sections.push(currentSection);
+                    }
+                }
+                // Detect time-based activities
+                else if (line.match(/\d{1,2}:\d{2}|\d{1,2}:\d{2}\s*(AM|PM)/i)) {
+                    if (currentDay) {
+                        const timeMatch = line.match(/(\d{1,2}:\d{2}(?:\s*(?:AM|PM))?)/i);
+                        const time = timeMatch ? timeMatch[1] : '🕐';
+                        
+                        // Extract activity details
+                        let content = line.replace(timeMatch ? timeMatch[0] : '', '').trim();
+                        content = content.replace(/^[|\-–]+/, '').trim();
+                        
+                        // Split by separators to get title and description
+                        const parts = content.split(/[–\-|]/)
+                        const title = parts[0] ? parts[0].trim() : 'Activity';
+                        const description = parts.slice(1).join(' ').trim() || 'Planned activity';
+                        
+                        currentDay.activities.push({
+                            time: time,
+                            title: title,
+                            description: description,
+                            type: 'timed'
+                        });
+                    }
+                }
+                // Detect table rows or bullet points
+                else if (line.includes('|') && currentSection) {
+                    const cells = line.split('|').map(cell => cell.trim()).filter(cell => cell);
+                    if (cells.length >= 2) {
+                        currentSection.items.push({
+                            key: cells[0],
+                            value: cells.slice(1).join(' | ')
+                        });
+                    }
+                }
+                // General content lines
+                else if (currentDay && line.length > 10) {
+                    if (currentSection) {
+                        currentSection.items.push({
+                            key: '',
+                            value: line
+                        });
+                    } else {
+                        // Add as general activity
+                        currentDay.activities.push({
+                            time: '🕐',
+                            title: line.length > 60 ? line.substring(0, 60) + '...' : line,
+                            description: line.length > 60 ? line : '',
+                            type: 'general'
+                        });
+                    }
+                }
+            });
+            
+            if (currentDay) days.push(currentDay);
+            
+            // If no days parsed, create structured fallback
+            if (days.length === 0) {
+                const fallbackActivities = cleanLines.slice(0, 10).map((line, i) => ({
+                    time: ['9:00', '11:00', '13:00', '15:00', '17:00', '19:00'][i % 6] || '🕐',
+                    title: line.length > 50 ? line.substring(0, 50) + '...' : line,
+                    description: line.length > 50 ? line : 'Exciting planned activity',
+                    type: 'general'
+                }));
+                
+                days.push({
+                    title: 'Day 1',
+                    date: userTripDetails.arrival_date || 'Your Adventure',
+                    description: 'Amazing experiences await!',
+                    activities: fallbackActivities,
+                    sections: []
+                });
+            }
+            
+            return days;
+        }
+
+        async function getWeatherTool() {
+            const city = document.getElementById('weatherCityTool').value;
+            if (!city) {
+                showToolResult('Please enter a city name', 'error');
+                return;
+            }
+
+            showToolResult('Fetching weather data...', 'loading');
+            try {
+                const response = await fetch(`${API_URL}/weather`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ city })
+                });
+                const data = await response.json();
+                
+                if (data.forecasts) {
+                    displayWeather(data);
+                    showTab('planning'); // Switch to planning tab to show results
+                    document.getElementById('results').style.display = 'block';
+                    document.getElementById('weatherSection').scrollIntoView({ behavior: 'smooth' });
+                    showToolResult(`Weather data loaded for ${city}!`, 'success');
+                } else {
+                    showToolResult('No weather data available for this city', 'error');
+                }
+            } catch (error) {
+                showToolResult(`Error fetching weather: ${error.message}`, 'error');
+            }
+        }
+
+        async function convertCurrencyTool() {
+            const from = document.getElementById('currencyFromTool').value;
+            const to = document.getElementById('currencyToTool').value;
+            
+            if (!from || !to) {
+                showToolResult('Please enter both cities', 'error');
+                return;
+            }
+
+            showToolResult('Converting currency...', 'loading');
+            try {
+                const response = await fetch(`${API_URL}/currency`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ from_city: from, to_city: to })
+                });
+                const data = await response.json();
+                
+                // Store exchange rate for expense conversion
+                exchangeRateInfo = {
+                    rate: data.exchange_rate,
+                    fromCurrency: data.from_currency,
+                    toCurrency: data.to_currency
+                };
+                
+                const resultHtml = `
+                    <div style="padding: 20px; background: #f8f9fa; border-radius: 10px; margin-top: 15px;">
+                        <h4 style="color: #667eea; margin-bottom: 15px;">💱 Currency Conversion</h4>
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
+                            <div style="text-align: center;">
+                                <div style="font-size: 1.2em; font-weight: bold;">1 ${data.from_currency}</div>
+                                <div style="color: #666;">${from}</div>
+                            </div>
+                            <div style="font-size: 1.5em; color: #667eea;">→</div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 1.2em; font-weight: bold;">${data.exchange_rate} ${data.to_currency}</div>
+                                <div style="color: #666;">${to}</div>
+                            </div>
+                        </div>
+                        <div style="padding: 10px; background: #e3f2fd; border-radius: 5px; font-style: italic;">
+                            ${data.message}
+                        </div>
+                    </div>
+                `;
+                showToolResult(resultHtml, 'success', true);
+            } catch (error) {
+                showToolResult(`Error converting currency: ${error.message}`, 'error');
+            }
+        }
+        
+        async function getAttractions() {
+            const city = document.getElementById('attractionsCity').value;
+            const days = document.getElementById('attractionsDays').value;
+            
+            if (!city) {
+                showToolResult('Please enter a city name', 'error');
+                return;
+            }
+
+            showToolResult('Finding top attractions...', 'loading');
+            try {
+                const response = await fetch(`${API_URL}/attractions`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ city, num_days: parseInt(days) })
+                });
+                const data = await response.json();
+                
+                if (data && Array.isArray(data)) {
+                    displayAttractions(data);
+                    showTab('planning');
+                    document.getElementById('results').style.display = 'block';
+                    document.getElementById('attractionsSection').scrollIntoView({ behavior: 'smooth' });
+                    showToolResult(`Found ${data.length} attractions in ${city}!`, 'success');
+                } else {
+                    showToolResult('No attractions found for this city', 'error');
+                }
+            } catch (error) {
+                showToolResult(`Error fetching attractions: ${error.message}`, 'error');
+            }
+        }
+        
+        async function getHotels() {
+            const city = document.getElementById('hotelCity').value;
+            const adults = document.getElementById('hotelAdults').value;
+            const kids = document.getElementById('hotelKids').value;
+            const days = document.getElementById('hotelDays').value;
+            
+            if (!city) {
+                showToolResult('Please enter a city name', 'error');
+                return;
+            }
+
+            showToolResult('Searching for hotels...', 'loading');
+            try {
+                const response = await fetch(`${API_URL}/hotels`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        city, 
+                        num_adults: parseInt(adults), 
+                        num_kids: parseInt(kids),
+                        num_days: parseInt(days)
+                    })
+                });
+                const data = await response.json();
+                
+                if (data && Array.isArray(data)) {
+                    displayHotels(data);
+                    showTab('planning');
+                    document.getElementById('results').style.display = 'block';
+                    document.getElementById('hotelsSection').scrollIntoView({ behavior: 'smooth' });
+                    showToolResult(`Found ${data.length} hotels in ${city}!`, 'success');
+                } else {
+                    showToolResult('No hotels found for this city', 'error');
+                }
+            } catch (error) {
+                showToolResult(`Error fetching hotels: ${error.message}`, 'error');
+            }
+        }
+        
+        async function getNearbyPlaces() {
+            const city = document.getElementById('nearbyCity').value;
+            
+            if (!city) {
+                showToolResult('Please enter a city name', 'error');
+                return;
+            }
+
+            showToolResult('Finding nearby places...', 'loading');
+            try {
+                const response = await fetch(`${API_URL}/nearby-places`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ city })
+                });
+                const data = await response.json();
+                
+                if (data && data.items && Array.isArray(data.items)) {
+                    const resultHtml = `
+                        <div style="padding: 20px; background: #f8f9fa; border-radius: 10px; margin-top: 15px;">
+                            <h4 style="color: #667eea; margin-bottom: 15px;">📍 Nearby Places in ${city}</h4>
+                            ${data.items.map(place => `
+                                <div style="background: white; padding: 15px; margin: 10px 0; border-radius: 8px; border-left: 4px solid #667eea;">
+                                    <div style="font-weight: 600; color: #333; margin-bottom: 5px;">${place.name}</div>
+                                    <div style="color: #666; margin-bottom: 8px;">${place.description || 'Interesting place to visit'}</div>
+                                    <div style="font-size: 0.9em; color: #888;">📍 ${place.distance_km}km away</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                    showToolResult(resultHtml, 'success', true);
+                } else {
+                    showToolResult('No nearby places found', 'error');
+                }
+            } catch (error) {
+                showToolResult(`Error fetching nearby places: ${error.message}`, 'error');
+            }
+        }
+
+        async function exportToExcel() {
+            if (!currentTripId) {
+                alert('No trip to export');
+                return;
+            }
+
+            try {
+                window.open(`${API_URL}/trip/${currentTripId}/export`, '_blank');
+            } catch (error) {
+                alert('Error exporting: ' + error.message);
+            }
+        }
+        
+        function exportItineraryToPDF() {
+            if (!currentTripId) {
+                alert('No itinerary to export');
+                return;
+            }
+            
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Set up the PDF
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(20);
+            doc.setTextColor(102, 126, 234);
+            doc.text('🗓️ Travel Itinerary', 20, 30);
+            
+            // Add trip details
+            const fromCity = document.getElementById('fromCity').value;
+            const toCity = document.getElementById('toCity').value;
+            const arrivalDate = document.getElementById('arrivalDate').value;
+            const numDays = document.getElementById('numDays').value;
+            
+            doc.setFontSize(12);
+            doc.setTextColor(0, 0, 0);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`From: ${fromCity} → To: ${toCity}`, 20, 45);
+            doc.text(`Date: ${arrivalDate} | Duration: ${numDays} days`, 20, 55);
+            
+            // Add a line separator
+            doc.setLineWidth(0.5);
+            doc.line(20, 65, 190, 65);
+            
+            // Get itinerary content
+            const itineraryElement = document.getElementById('itineraryContent');
+            if (itineraryElement) {
+                let yPosition = 80;
+                const pageHeight = doc.internal.pageSize.height;
+                
+                // Extract day cards
+                const dayCards = itineraryElement.querySelectorAll('.day-card');
+                
+                dayCards.forEach((dayCard, dayIndex) => {
+                    // Check if we need a new page
+                    if (yPosition > pageHeight - 50) {
+                        doc.addPage();
+                        yPosition = 30;
+                    }
+                    
+                    // Day title
+                    const dayTitle = dayCard.querySelector('.day-title');
+                    if (dayTitle) {
+                        doc.setFont('helvetica', 'bold');
+                        doc.setFontSize(14);
+                        doc.setTextColor(102, 126, 234);
+                        doc.text(dayTitle.textContent.trim(), 20, yPosition);
+                        yPosition += 15;
+                    }
+                    
+                    // Activities
+                    const activities = dayCard.querySelectorAll('.activity-item');
+                    activities.forEach((activity) => {
+                        if (yPosition > pageHeight - 30) {
+                            doc.addPage();
+                            yPosition = 30;
+                        }
+                        
+                        const time = activity.querySelector('.activity-time');
+                        const title = activity.querySelector('.activity-title');
+                        const description = activity.querySelector('.activity-description');
+                        
+                        doc.setFont('helvetica', 'bold');
+                        doc.setFontSize(10);
+                        doc.setTextColor(102, 126, 234);
+                        if (time) {
+                            doc.text(time.textContent.trim(), 25, yPosition);
+                        }
+                        
+                        doc.setFont('helvetica', 'bold');
+                        doc.setFontSize(11);
+                        doc.setTextColor(0, 0, 0);
+                        if (title) {
+                            doc.text(title.textContent.trim(), 65, yPosition);
+                        }
+                        
+                        yPosition += 8;
+                        
+                        if (description && description.textContent.trim()) {
+                            doc.setFont('helvetica', 'normal');
+                            doc.setFontSize(9);
+                            doc.setTextColor(100, 100, 100);
+                            const lines = doc.splitTextToSize(description.textContent.trim(), 120);
+                            doc.text(lines, 65, yPosition);
+                            yPosition += lines.length * 5;
+                        }
+                        
+                        yPosition += 5;
+                    });
+                    
+                    yPosition += 10;
+                });
+            } else {
+                // Fallback if no structured content
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(11);
+                doc.text('Itinerary details will be available after trip planning.', 20, 80);
+            }
+            
+            // Add footer
+            const totalPages = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= totalPages; i++) {
+                doc.setPage(i);
+                doc.setFontSize(8);
+                doc.setTextColor(150, 150, 150);
+                doc.text(`Generated by AI Travel Planner - Page ${i} of ${totalPages}`, 20, pageHeight - 20);
+            }
+            
+            // Save the PDF
+            doc.save(`travel-itinerary-${fromCity}-to-${toCity}.pdf`);
+        }
+    </script>
+</body>
+</html>

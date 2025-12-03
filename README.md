@@ -36,8 +36,7 @@ AI-Trip-Planner/
 │   ├── __init__.py
 │   ├── app.py             # FastAPI app creation and setup
 │   └── routes.py          # API endpoint implementations
-└── notebooks/             # Jupyter notebooks (if any)
-    ├── humaninloop.ipynb
+└── notebooks/             # Jupyter notebooks
     └── travel-planner-assignment.ipynb
 ```
 

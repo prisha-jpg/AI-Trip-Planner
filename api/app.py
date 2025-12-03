@@ -1,6 +1,7 @@
 """FastAPI application setup."""
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from config.settings import settings
 from models.schemas import (
     TripRequest, WeatherRequest, AttractionRequest,
@@ -14,6 +15,15 @@ def create_app():
         title=settings.API_TITLE,
         description=settings.API_DESCRIPTION,
         version=settings.API_VERSION
+    )
+    
+    # Add CORS middleware
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],  # Allows all origins
+        allow_credentials=True,
+        allow_methods=["*"],  # Allows all methods
+        allow_headers=["*"],  # Allows all headers
     )
     
     # Add routes
