@@ -1,6 +1,4 @@
-# AI Travel Planner - Modular Architecture
-
-This project has been refactored into a modular architecture with the following structure:
+# AI Travel Planner - 
 
 ## Project Structure
 
